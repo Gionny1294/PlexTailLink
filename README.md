@@ -2,9 +2,23 @@
 
 Make Plex feel at home, anywhere, through your private Tailscale network.
 
+[![Windows validation](https://github.com/Gionny1294/PlexTailLink/actions/workflows/windows-validation.yml/badge.svg)](https://github.com/Gionny1294/PlexTailLink/actions/workflows/windows-validation.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Linux](https://img.shields.io/badge/Linux-supported-FCC624?logo=linux&logoColor=black)](#linux)
+[![Windows](https://img.shields.io/badge/Windows-supported-0078D4?logo=windows)](#windows)
+
 This project configures a Linux or Windows Plex server as a Tailscale subnet router, so your own Tailscale devices can reach Plex through its LAN address while away from home.
 
 It does not patch Plex, bypass authentication, or modify subscriptions. It creates a real private network route. Plex still decides whether a session is local; verify it in the Plex Dashboard (`Local` / `LAN`).
+
+## Why PlexTailLink?
+
+- one command on Linux or one PowerShell script on Windows;
+- no public Plex port or router port forwarding required;
+- automatic LAN detection and Plex configuration;
+- Docker Plex `/config` detection on Linux;
+- idempotent setup that is safe to run again;
+- Windows validation on every relevant GitHub change.
 
 ## Requirements
 
