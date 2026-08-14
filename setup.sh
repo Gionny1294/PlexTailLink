@@ -60,6 +60,22 @@ if [[ -z $PLEX_PREFERENCES ]]; then
   done
 fi
 
+if [[ -z $PLEX_PREFERENCES ]] && command -v docker >/dev/null; then
+  while IFS= read -r container; do
+    image=$(docker inspect --format '{{.Config.Image}}' "$container" 2>/dev/null || true)
+    identity="${container,,} ${image,,}"
+    [[ $identity == *plex* ]] || continue
+    config_source=$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/config"}}{{.Source}}{{end}}{{end}}' "$container" 2>/dev/null || true)
+    [[ -n $config_source ]] || continue
+    candidate="$config_source/Library/Application Support/Plex Media Server/Preferences.xml"
+    if [[ -r $candidate ]]; then
+      PLEX_PREFERENCES=$candidate
+      printf 'Detected Plex preferences from Docker container: %s\n' "$container"
+      break
+    fi
+  done < <(docker ps --format '{{.Names}}' 2>/dev/null || true)
+fi
+
 if [[ -n $PLEX_PREFERENCES && -r $PLEX_PREFERENCES ]]; then
   token=$(sed -n 's/.*PlexOnlineToken="\([^"]*\)".*/\1/p' "$PLEX_PREFERENCES")
   [[ -n $token ]] || die "PlexOnlineToken was not found"

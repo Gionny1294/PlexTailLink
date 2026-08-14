@@ -26,6 +26,9 @@ sudo ./setup.sh --lan-cidr 192.168.1.0/24 \
   --plex-preferences "/path/to/Preferences.xml"
 ```
 
+For Docker installations, the Linux script automatically looks for a running
+Plex container and resolves the host directory mounted at `/config`.
+
 ## Windows
 
 Open **PowerShell as Administrator**, then run:
