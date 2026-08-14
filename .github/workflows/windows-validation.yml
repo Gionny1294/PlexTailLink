@@ -1,0 +1,95 @@
+name: Windows validation
+
+on:
+  push:
+    paths:
+      - setup.ps1
+      - README.md
+      - .github/workflows/windows-validation.yml
+  pull_request:
+    paths:
+      - setup.ps1
+      - README.md
+      - .github/workflows/windows-validation.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Parse and inspect PowerShell script
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          $ast = [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path '.\setup.ps1'),
+            [ref]$tokens,
+            [ref]$errors
+          )
+          if ($errors.Count -gt 0) {
+            $errors | Format-List | Out-String | Write-Error
+            exit 1
+          }
+
+          $commands = $ast.FindAll({
+            param($node)
+            $node -is [System.Management.Automation.Language.CommandAst]
+          }, $true) | ForEach-Object { $_.GetCommandName() }
+
+          $required = @(
+            'Get-NetRoute',
+            'Get-NetIPAddress',
+            'Get-NetIPInterface',
+            'Set-NetIPInterface',
+            'Invoke-WebRequest'
+          )
+          foreach ($command in $required) {
+            if ($command -notin $commands) {
+              throw "Required command is missing: $command"
+            }
+          }
+
+      - name: Test LAN CIDR calculation
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          $ast = [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path '.\setup.ps1'),
+            [ref]$tokens,
+            [ref]$errors
+          )
+          $functionAst = $ast.FindAll({
+            param($node)
+            $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+              $node.Name -eq 'Get-NetworkCidr'
+          }, $true) | Select-Object -First 1
+          if (-not $functionAst) { throw 'Get-NetworkCidr was not found' }
+
+          . ([scriptblock]::Create($functionAst.Extent.Text))
+          $cases = @(
+            @{ Address = '192.168.1.13'; Prefix = 24; Expected = '192.168.1.0/24' },
+            @{ Address = '10.12.130.4'; Prefix = 20; Expected = '10.12.128.0/20' }
+          )
+          foreach ($case in $cases) {
+            $actual = Get-NetworkCidr $case.Address $case.Prefix
+            if ($actual -ne $case.Expected) {
+              throw "Expected $($case.Expected), got $actual"
+            }
+          }
+
+      - name: Check Windows documentation
+        shell: pwsh
+        run: |
+          $readme = Get-Content '.\README.md' -Raw
+          @('.\setup.ps1', 'Mobile Data/Remote Streaming', 'Original/Maximum') |
+            ForEach-Object {
+              if (-not $readme.Contains($_)) { throw "README is missing: $_" }
+            }
