@@ -1,4 +1,6 @@
-# Plex over Tailscale as a local connection
+# PlexTailLink
+
+Make Plex feel at home, anywhere, through your private Tailscale network.
 
 This project configures a Linux or Windows Plex server as a Tailscale subnet router, so your own Tailscale devices can reach Plex through its LAN address while away from home.
 
@@ -14,8 +16,8 @@ It does not patch Plex, bypass authentication, or modify subscriptions. It creat
 ## Linux
 
 ```bash
-git clone https://github.com/Gionny1294/plex-tailscale-local.git
-cd plex-tailscale-local
+git clone https://github.com/Gionny1294/PlexTailLink.git
+cd PlexTailLink
 sudo ./setup.sh
 ```
 
@@ -34,8 +36,8 @@ Plex container and resolves the host directory mounted at `/config`.
 Open **PowerShell as Administrator**, then run:
 
 ```powershell
-git clone https://github.com/Gionny1294/plex-tailscale-local.git
-cd plex-tailscale-local
+git clone https://github.com/Gionny1294/PlexTailLink.git
+cd PlexTailLink
 Set-ExecutionPolicy -Scope Process Bypass
 .\setup.ps1
 ```
